@@ -1,30 +1,17 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "hasher.h"
+#include "askwidget.h"
+#include "ui_askwidget.h"
 #include <QCommonStyle>
 #include <QDesktopWidget>
 #include <QFileDialog>
-#include <QFileInfo>
-#include <QMessageBox>
 #include <QTreeView>
 #include <QDebug>
-#include <QCryptographicHash>
-#include <QFile>
-#include <QListWidget>
-#include <QListWidgetItem>
-#include <QTextEdit>
-#include <QHash>
-
-namespace tools {
-    QString const prefix = "Selected directory: ";
-    QCryptographicHash hasher(QCryptographicHash::Sha256);
-    long long const p = 31541;
-    long long const mod = 1e9 + 9;
-    QString const search_results_title = "Search results:";
-}
 
 void MainWindow::set_selected_directory(const QDir & dir) {
     selected_directory = dir;
-    ui->lineEdit->setText(tools::prefix + dir.absolutePath());
+    ui->lineEdit->setText("Selected directory: " + dir.absolutePath());
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -59,90 +46,14 @@ void MainWindow::on_selectButton_clicked()
     }
 }
 
-long long weak_hash(const QFileInfo &file_info) {
-    QFile file(file_info.absoluteFilePath());
-    file.open(QIODevice::ReadOnly);
-    long long res = file.size();
-    int i = 0;
-    for (; i < 10 && !file.atEnd(); i++) {
-        char* c;
-        file.read(c, sizeof(char));
-        res = (res * tools::p + (*c) + 1) % tools::mod;
-    }
-    for (; i < 10; i++) {
-        res = (res * tools::p) % tools::mod;
-    }
-    file.close();
-    return res;
-}
-
-QByteArray sha256(const QFileInfo &file_info) {
-    QFile file(file_info.absoluteFilePath());
-    file.open(QIODevice::ReadOnly);
-    tools::hasher.reset();
-    tools::hasher.addData(&file);
-    file.close();
-    return tools::hasher.result();
-}
-
-void MainWindow::delete_duplicates() {
-    for (auto it = sha256_hashes.begin(); it != sha256_hashes.end(); it++) {
-        if (it.value().size() > 1) {
-            for (size_t i = 1; i < it.value().size(); i++) {
-                QFile file(it.value()[i]);
-                file.remove();
-            }
-        }
-    }
-    sha256_hashes.clear();
-}
-
-void MainWindow::ask() {
-    QWidget* form = new QWidget;
-    form->setWindowTitle(tools::search_results_title);
-    form->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, 3 * form->size() / 2, qApp->desktop()->availableGeometry()));
-    QVBoxLayout *layout = new QVBoxLayout();
-    QListWidget *list = new QListWidget(form);
-    int rowcnt = 0;
-    for (auto it = sha256_hashes.begin(); it != sha256_hashes.end(); it++) {
-        if (it.value().size() > 1) {
-            for (QString duplicate : it.value()) {
-                QListWidgetItem *newItem = new QListWidgetItem;
-                newItem->setText(duplicate);
-                list->insertItem(rowcnt++, newItem);
-            }
-            QListWidgetItem *newItem = new QListWidgetItem;
-            newItem->setText("--");
-            list->insertItem(rowcnt++, newItem);
-        }
-    }
-    QTextEdit *text = new QTextEdit;
-    text->setPlainText("Delete duplicates? (the first file in corresponding list remains)");
-    QPushButton *button = new QPushButton("Delete", form);
-    layout->addWidget(list);
-    layout->addWidget(text);
-    layout->addWidget(button);
-    form->setLayout(layout);
-    QObject::connect(button, &QPushButton::clicked, this, &MainWindow::delete_duplicates);
-    QObject::connect(button, SIGNAL(clicked()), form, SLOT(close()));
-
-    form->show();
+void MainWindow::ask(DuplicatesMap sha256_hashes) {
+    AskWidget *askWidget = new AskWidget(sha256_hashes);
+    askWidget->show();
 }
 
 void MainWindow::on_scanButton_clicked()
 {
-    QHash <long long, QVector <QString>> weak_hashes;
-    QDirIterator it(selected_directory, QDirIterator::Subdirectories);
-    while (it.hasNext()) {
-        QFileInfo file_info(it.next());
-        if (file_info.isFile()) {
-            weak_hashes[weak_hash(file_info)].push_back(it.filePath());
-         }
-    }
-    for (auto it = weak_hashes.begin(); it != weak_hashes.end(); it++) {
-        if (it.value().size() > 1) {
-            for (QString &i : it.value()) sha256_hashes[sha256(i)].push_back(i);
-        }
-    }
-    ask();
+    Hasher *hasher = new Hasher(selected_directory);
+    QObject::connect(hasher, &Hasher::Done, this, &MainWindow::ask);
+    hasher->HashEntries();
 }

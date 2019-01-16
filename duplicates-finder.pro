@@ -13,8 +13,16 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+           mainwindow.cpp\
+           hasher.cpp \
+    askwidget.cpp
 
-HEADERS  += mainwindow.h
 
-FORMS    += mainwindow.ui
+
+HEADERS  += mainwindow.h\
+            hasher.h \
+    askwidget.h
+
+
+FORMS    += mainwindow.ui \
+    askwidget.ui

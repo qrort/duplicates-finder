@@ -3,14 +3,13 @@
 
 #include <QMainWindow>
 #include <QFileSystemModel>
-#include <QDir>
-#include <QMap>
-#include <QVector>
 #include <QThread>
 
 namespace Ui {
 class MainWindow;
 }
+
+using DuplicatesMap = QMap <QByteArray, QVector <QString>>;
 
 class MainWindow : public QMainWindow
 {
@@ -19,7 +18,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void show_directory();
 
 private slots:
 
@@ -27,16 +25,17 @@ private slots:
 
     void on_scanButton_clicked();
 
-    void delete_duplicates();
+    //void delete_duplicates();
+
+    void ask(DuplicatesMap);
 
 private:
     Ui::MainWindow *ui;
     QFileSystemModel *model;
     QDir selected_directory;
-    QMap <QByteArray, QVector <QString>>  sha256_hashes;
+
+    void show_directory();
     void set_selected_directory(const QDir & dir);
-    void ask();
-    QThread *thread;
 };
 
 #endif // MAINWINDOW_H
