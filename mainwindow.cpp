@@ -12,8 +12,7 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QTextEdit>
-#include <unordered_map>
-#include <vector>
+#include <QHash>
 
 namespace tools {
     QString const prefix = "Selected directory: ";
@@ -34,9 +33,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, 3 * size() / 2, qApp->desktop()->availableGeometry()));
-    // model->setFilter(QDir::NoSymLinks);
     model = new QFileSystemModel(this);
     model->setRootPath(QDir::homePath());
+
     ui->treeView->setModel(model);
     ui->treeView->setColumnWidth(0, 320);
     ui->treeView->setRootIndex(model->index(QDir::homePath()));
@@ -52,16 +51,17 @@ void MainWindow::on_selectButton_clicked()
 {
 
     QString dir = QFileDialog::getExistingDirectory(this, "Select Directory for Scanning",
-                                                        QString(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+                                                        selected_directory.absolutePath(), QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
-    set_selected_directory(QDir(dir));
-    ui->treeView->setRootIndex(model->index(dir));
+    if (!dir.isEmpty()) {
+        set_selected_directory(QDir(dir));
+         ui->treeView->setRootIndex(model->index(dir));
+    }
 }
 
 long long weak_hash(const QFileInfo &file_info) {
     QFile file(file_info.absoluteFilePath());
     file.open(QIODevice::ReadOnly);
-    //return file.size();
     long long res = file.size();
     int i = 0;
     for (; i < 10 && !file.atEnd(); i++) {
@@ -87,9 +87,9 @@ QByteArray sha256(const QFileInfo &file_info) {
 
 void MainWindow::delete_duplicates() {
     for (auto it = sha256_hashes.begin(); it != sha256_hashes.end(); it++) {
-        if (it->second.size() > 1) {
-            for (size_t i = 1; i < it->second.size(); i++) {
-                QFile file(it->second[i]);
+        if (it.value().size() > 1) {
+            for (size_t i = 1; i < it.value().size(); i++) {
+                QFile file(it.value()[i]);
                 file.remove();
             }
         }
@@ -98,7 +98,6 @@ void MainWindow::delete_duplicates() {
 }
 
 void MainWindow::ask() {
-    using namespace std;
     QWidget* form = new QWidget;
     form->setWindowTitle(tools::search_results_title);
     form->setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, 3 * form->size() / 2, qApp->desktop()->availableGeometry()));
@@ -106,8 +105,8 @@ void MainWindow::ask() {
     QListWidget *list = new QListWidget(form);
     int rowcnt = 0;
     for (auto it = sha256_hashes.begin(); it != sha256_hashes.end(); it++) {
-        if (it->second.size() > 1) {
-            for (QString duplicate : it->second) {
+        if (it.value().size() > 1) {
+            for (QString duplicate : it.value()) {
                 QListWidgetItem *newItem = new QListWidgetItem;
                 newItem->setText(duplicate);
                 list->insertItem(rowcnt++, newItem);
@@ -132,10 +131,7 @@ void MainWindow::ask() {
 
 void MainWindow::on_scanButton_clicked()
 {
-
-    using namespace std;
-    unsigned int start = clock();
-    unordered_map <long long, vector <QString>> weak_hashes;
+    QHash <long long, QVector <QString>> weak_hashes;
     QDirIterator it(selected_directory, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QFileInfo file_info(it.next());
@@ -144,9 +140,9 @@ void MainWindow::on_scanButton_clicked()
          }
     }
     for (auto it = weak_hashes.begin(); it != weak_hashes.end(); it++) {
-        if (it->second.size() > 1) {
-            for (QString &i : it->second) sha256_hashes[sha256(i)].push_back(i);
-        };
+        if (it.value().size() > 1) {
+            for (QString &i : it.value()) sha256_hashes[sha256(i)].push_back(i);
+        }
     }
     ask();
 }

@@ -4,7 +4,9 @@
 #include <QMainWindow>
 #include <QFileSystemModel>
 #include <QDir>
-#include <map>
+#include <QMap>
+#include <QVector>
+#include <QThread>
 
 namespace Ui {
 class MainWindow;
@@ -31,9 +33,10 @@ private:
     Ui::MainWindow *ui;
     QFileSystemModel *model;
     QDir selected_directory;
-    std::map <QByteArray, std::vector <QString>>  sha256_hashes;
+    QMap <QByteArray, QVector <QString>>  sha256_hashes;
     void set_selected_directory(const QDir & dir);
     void ask();
+    QThread *thread;
 };
 
 #endif // MAINWINDOW_H
