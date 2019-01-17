@@ -17,6 +17,7 @@ public
     slots:
         void HashEntries();
     signals:
+        void FileHashed();
         void Done(DuplicatesMap sha256_hashes);
 
 private:

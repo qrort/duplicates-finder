@@ -3,6 +3,7 @@
 #include <QDirIterator>
 #include <QFileInfo>
 #include <QCryptographicHash>
+#include <QThread>
 
 namespace tools {
     QCryptographicHash hasher(QCryptographicHash::Sha256);
@@ -40,15 +41,23 @@ void Hasher::HashEntries() {
     QHash <long long, QVector <QString>> weak_hashes;
     QDirIterator it(dir, QDirIterator::Subdirectories);
     while (it.hasNext()) {
+        if (QThread::currentThread()->isInterruptionRequested()) return;
+
         QFileInfo file_info(it.next());
         if (file_info.isFile()) {
             weak_hashes[weak_hash(file_info)].push_back(it.filePath());
-         }
+            emit FileHashed();
+        }
     }
     for (auto it = weak_hashes.begin(); it != weak_hashes.end(); it++) {
         if (it.value().size() > 1) {
-            for (QString &i : it.value()) sha256_hashes[sha256(i)].push_back(i);
-        }
+            for (QString &i : it.value()) {
+               if (QThread::currentThread()->isInterruptionRequested()) return;
+
+               sha256_hashes[sha256(i)].push_back(i);
+               emit FileHashed();
+            }
+        } else emit FileHashed();
     }
     emit Done(sha256_hashes);
 }

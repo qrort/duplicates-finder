@@ -17,7 +17,7 @@ public:
     explicit AskWidget(DuplicatesMap const& _data, QWidget *parent = 0);
     ~AskWidget();
 public slots:
-    void delete_duplicates();
+    void deleteDuplicates();
 private:
     DuplicatesMap data;
     Ui::AskWidget *ui;
