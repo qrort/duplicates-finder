@@ -12,17 +12,17 @@ TARGET = duplicates-finder
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-           mainwindow.cpp\
-           hasher.cpp \
-    askwidget.cpp
+SOURCES += Sources/main.cpp\
+           Sources/mainwindow.cpp\
+           Sources/hasher.cpp \
+           Sources/askwidget.cpp
 
 
 
-HEADERS  += mainwindow.h\
-            hasher.h \
-    askwidget.h
+HEADERS  += Headers/mainwindow.h\
+            Headers/hasher.h \
+            Headers/askwidget.h
 
 
-FORMS    += mainwindow.ui \
-    askwidget.ui
+FORMS    += Forms/mainwindow.ui \
+            Forms/askwidget.ui
