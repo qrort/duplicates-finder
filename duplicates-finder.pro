@@ -1,3 +1,4 @@
+
 #-------------------------------------------------
 #
 # Project created by QtCreator 2018-12-22T16:52:50
@@ -25,4 +26,4 @@ HEADERS  += Headers/mainwindow.h\
 
 
 FORMS    += Forms/mainwindow.ui \
-            Forms/askwidget.ui
+Forms/askwidget.ui

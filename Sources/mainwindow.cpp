@@ -92,15 +92,16 @@ void MainWindow::on_scanButton_clicked()
 
         int files_count = count();
 
-        ui->progressBar->setMaximum(files_count);
+        ui->progressBar->setMaximum(2 * files_count);
         progress = 0;
 
         hasher->moveToThread(hashing_thread);
 
         connect(hasher, &Hasher::Done, this, &MainWindow::ask);
-
+        connect(hasher, &Hasher::Done, hasher, &Hasher::deleteLater);
         connect(hashing_thread, &QThread::started, hasher, &Hasher::HashEntries);
         connect(hasher, &Hasher::FileHashed, this, &MainWindow::update_progress);
+
         hashing_thread->start();
     }
 }

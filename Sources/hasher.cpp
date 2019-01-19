@@ -53,7 +53,6 @@ void Hasher::HashEntries() {
         if (it.value().size() > 1) {
             for (QString &i : it.value()) {
                if (QThread::currentThread()->isInterruptionRequested()) return;
-
                sha256_hashes[sha256(i)].push_back(i);
                emit FileHashed();
             }
