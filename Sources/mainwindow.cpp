@@ -76,7 +76,7 @@ void MainWindow::ask(DuplicatesMap sha256_hashes) {
 
 int MainWindow::count() {
     int result = 0;
-    QDirIterator it(selected_directory, QDirIterator::Subdirectories);
+    QDirIterator it(selected_directory.absolutePath(), QDir::Dirs | QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot | QDir::NoSymLinks, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QFileInfo file_info(it.next());
         if (file_info.isFile()) result++;
