@@ -53,10 +53,6 @@ void MainWindow::on_selectButton_clicked()
 
 void MainWindow::update_progress() {
     ui->progressBar->setValue(++progress);
-    if (ui->progressBar->isMaximized()) {
-        progress = 0;
-        ui->progressBar->setValue(0);
-    }
 }
 
 void MainWindow::reset_progress() {
@@ -66,6 +62,12 @@ void MainWindow::reset_progress() {
     ui->progressBar->setValue(0);
     delete hashing_thread;
     hashing_thread = nullptr;
+}
+
+void MainWindow::list_error(QString message) {
+    QListWidgetItem *newItem = new QListWidgetItem;
+    newItem->setText(message);
+    ui->errorList->insertItem(errors++, newItem);
 }
 
 void MainWindow::ask(DuplicatesMap sha256_hashes) {
@@ -89,19 +91,14 @@ void MainWindow::on_scanButton_clicked()
     if (hashing_thread == nullptr) {
         hashing_thread = new QThread;
         Hasher *hasher = new Hasher(selected_directory);
-
         int files_count = count();
-
+        progress = errors = 0;
+        ui->progressBar->setValue(0);
         ui->progressBar->setMaximum(2 * files_count);
-        progress = 0;
-
         hasher->moveToThread(hashing_thread);
-
         connect(hasher, &Hasher::Done, this, &MainWindow::ask);
-        connect(hasher, &Hasher::Done, hasher, &Hasher::deleteLater);
         connect(hashing_thread, &QThread::started, hasher, &Hasher::HashEntries);
         connect(hasher, &Hasher::FileHashed, this, &MainWindow::update_progress);
-
         hashing_thread->start();
     }
 }

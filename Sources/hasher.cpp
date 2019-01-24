@@ -12,15 +12,19 @@ namespace tools {
     long long const mod = 1e9 + 9;
 }
 
+Hasher::Hasher(QDir _dir) {
+    dir = _dir;
+    qRegisterMetaType<QString>("QString");
+}
 
-bool isOpenable(const QFileInfo & file) {
+bool Hasher::isOpenable(const QFileInfo & file) {
     if (file.isFile()) {
         if (!(QFile::permissions(file.filePath()) & QFile::ReadUser)) {
-           //emit log("Do not have permission for opening" + file.filePath());
+           emit log("Do not have permission for opening" + file.filePath());
            return false;
         }
         if (!file.isReadable()) {
-           //emit log(file.filePath() + "is not readable");
+           emit log(file.filePath() + "is not readable");
            return false;
         }
         return true;
@@ -55,21 +59,17 @@ QByteArray sha256(const QFileInfo &file_info) {
 }
 
 void Hasher::HashEntries() {
+    DuplicatesMap sha256_hashes;
     QHash <long long, QVector <QString>> weak_hashes;
-
     QDirIterator it(dir.absolutePath(), QDir::Dirs | QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot | QDir::NoSymLinks, QDirIterator::Subdirectories);
-
     while (it.hasNext()) {
         if (QThread::currentThread()->isInterruptionRequested()) return;
         QFileInfo file_info(it.next());
-        if (file_info.isFile()) {
-            if (isOpenable(file_info)) {
-                long long _hash = weak_hash(file_info);
-                if (!weak_hashes.contains(_hash)) weak_hashes[_hash] = QVector<QString>();
-                weak_hashes[_hash].push_back(file_info.absoluteFilePath());
-                emit FileHashed();
-            }
-        }
+        //if (file_info.isFile()) { ///THE PROBLEM OCCURS HERE
+        //if (isOpenable(file_info)) {
+            weak_hashes[weak_hash(file_info)].push_back(file_info.absoluteFilePath());
+        } else emit FileHashed();
+        emit FileHashed();
     }
     for (auto it = weak_hashes.begin(); it != weak_hashes.end(); it++) {
         if (it.value().size() > 1) {

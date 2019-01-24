@@ -12,17 +12,17 @@ class Hasher : public QObject {
     Q_OBJECT
 
 public:
-    explicit Hasher(QDir &dir) : dir(dir) {}
+    explicit Hasher(QDir _dir);
 public
     slots:
         void HashEntries();
     signals:
         void FileHashed();
-        void Done(DuplicatesMap sha256_hashes);
-
+        void Done(DuplicatesMap);
+        void log(QString);
 private:
-    QDir &dir;
-    DuplicatesMap sha256_hashes;
+    bool isOpenable(const QFileInfo & file_info);
+    QDir dir;
 };
 
 #endif
