@@ -17,9 +17,9 @@ long long weak_hash(const QFileInfo &file_info) {
     long long res = file.size();
     int i = 0;
     for (; i < 10 && !file.atEnd(); i++) {
-        char* c;
-        file.read(c, sizeof(char));
-        res = (res * tools::p + (*c) + 1) % tools::mod;
+        char c;
+        file.read(&c, sizeof(char));
+        res = (res * tools::p + c + 1) % tools::mod;
     }
     for (; i < 10; i++) {
         res = (res * tools::p) % tools::mod;
