@@ -42,7 +42,7 @@ private:
 
     void show_directory();
     void set_selected_directory(const QDir & dir);
-    void reset_progress();
+    void delete_thread();
     int count();
 };
 
