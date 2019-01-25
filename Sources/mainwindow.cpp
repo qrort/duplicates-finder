@@ -17,7 +17,8 @@ void MainWindow::set_selected_directory(const QDir & dir) {
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    hashing_thread(nullptr)
 {
     ui->setupUi(this);
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, 3 * size() / 2, qApp->desktop()->availableGeometry()));
@@ -36,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    terminate_thread();
     delete ui;
 }
 
@@ -60,16 +62,22 @@ void MainWindow::update_progress() {
 }
 
 void MainWindow::reset_progress() {
-    hashing_thread->quit();
-    hashing_thread->wait();
     progress = 0;
     ui->progressBar->setValue(0);
-    delete hashing_thread;
-    hashing_thread = nullptr;
+}
+
+void MainWindow::terminate_thread() {
+    if (hashing_thread != nullptr) {
+        hashing_thread->requestInterruption();
+        hashing_thread->wait();
+        delete hashing_thread;
+        hashing_thread = nullptr;
+    }
 }
 
 void MainWindow::ask(DuplicatesMap sha256_hashes) {
     AskWidget *askWidget = new AskWidget(sha256_hashes);
+    terminate_thread();
     reset_progress();
     askWidget->show();
 }
@@ -108,8 +116,6 @@ void MainWindow::on_scanButton_clicked()
 
 void MainWindow::on_cancelButton_clicked()
 {
-    if (hashing_thread != nullptr && hashing_thread->isRunning()) {
-        hashing_thread->requestInterruption();
-        reset_progress();
-    }
+    terminate_thread();
+    reset_progress();
 }
