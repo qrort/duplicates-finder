@@ -31,16 +31,18 @@ private slots:
 
     void update_progress();
 
+    void list_error(QString);
+
 private:
     Ui::MainWindow *ui;
     QFileSystemModel *model;
     QDir selected_directory;
     QThread *hashing_thread;
-    int progress;
+    int progress, errors;
 
     void show_directory();
     void set_selected_directory(const QDir & dir);
-    void reset_progress();
+    void delete_thread();
     int count();
 };
 
