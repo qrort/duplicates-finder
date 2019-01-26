@@ -60,8 +60,8 @@ void Hasher::HashEntries() {
     DuplicatesMap sha256_hashes;
     QHash <long long, QVector <QString>> weak_hashes;
     QDirIterator it(dir.absolutePath(), QDir::Dirs | QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot | QDir::NoSymLinks, QDirIterator::Subdirectories);
-    char *c = new char;
-    int cnt = 0;
+    //char *c = new char;
+    //int cnt = 0;
     while (it.hasNext()) {
         if (QThread::currentThread()->isInterruptionRequested()) return;
         QFileInfo file_info(it.next());
