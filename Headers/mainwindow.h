@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QFileSystemModel>
 #include <QThread>
+#include <chrono>
 
 namespace Ui {
 class MainWindow;
@@ -44,6 +45,8 @@ private:
     void set_selected_directory(const QDir & dir);
     void delete_thread();
     int count();
+    std::chrono::steady_clock::time_point begin;
+
 };
 
 #endif // MAINWINDOW_H

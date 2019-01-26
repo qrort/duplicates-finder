@@ -31,7 +31,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->treeView->setColumnWidth(0, 320);
     ui->treeView->setRootIndex(model->index(QDir::homePath()));
     set_selected_directory(QDir::home());
-
     qRegisterMetaType<DuplicatesMap>("DuplicatesMap");
 }
 
@@ -73,6 +72,11 @@ void MainWindow::list_error(QString message) {
 }
 
 void MainWindow::ask(DuplicatesMap sha256_hashes) {
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    QListWidgetItem *newItem = new QListWidgetItem;
+    newItem->setText(QString::number(std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()) +
+                     "ms");
+    ui->errorList->insertItem(errors++, newItem);
     AskWidget *askWidget = new AskWidget(sha256_hashes);
     delete_thread();
     askWidget->setWindowModality(Qt::ApplicationModal);
@@ -92,6 +96,7 @@ int MainWindow::count() {
 void MainWindow::on_scanButton_clicked()
 {
     if (hashing_thread == nullptr) {
+        begin = std::chrono::steady_clock::now();
         hashing_thread = new QThread;
         Hasher *hasher = new Hasher(selected_directory);
         int files_count = count();
