@@ -19,17 +19,15 @@ Hasher::Hasher(QDir _dir) {
 }
 
 bool Hasher::isOpenable(const QFileInfo & file) {
-    if (file.isFile()) {
-        if (!(QFile::permissions(file.filePath()) & QFile::ReadUser)) {
-           emit log("Do not have permission for opening" + file.filePath());
-           return false;
-        }
-        if (!file.isReadable()) {
-           emit log(file.filePath() + "is not readable");
-           return false;
-        }
-        return true;
-    } else return false;
+    if (!(QFile::permissions(file.filePath()) & QFile::ReadUser)) {
+       emit log("Do not have permission for opening" + file.filePath());
+       return false;
+    }
+    if (!file.isReadable()) {
+       emit log(file.filePath() + "is not readable");
+       return false;
+    }
+    return true;
 }
 
 
@@ -67,22 +65,21 @@ void Hasher::HashEntries() {
     while (it.hasNext()) {
         if (QThread::currentThread()->isInterruptionRequested()) return;
         QFileInfo file_info(it.next());
-        if (isOpenable(file_info)) {
-            weak_hashes[weak_hash(c, file_info)].push_back(file_info.absoluteFilePath());
-        } else {
+        if (file_info.isFile()) {
+            if (isOpenable(file_info)) {
+                weak_hashes[weak_hash(c, file_info)].push_back(file_info.absoluteFilePath());
+            } else {
+                emit FileHashed();
+                cnt++;
+            }
             emit FileHashed();
             cnt++;
-        }
-        if (file_info.isFile()) {
-           emit FileHashed();
-           cnt++;
         }
     }
     delete c;
     for (auto it = weak_hashes.begin(); it != weak_hashes.end(); it++) {
         if (it.value().size() > 1) {
             for (QString &i : it.value()) {
-               // qDebug() << it.value().size() << endl;
                 if (QThread::currentThread()->isInterruptionRequested()) return;
                 sha256_hashes[sha256(i)].push_back(i);
                 emit FileHashed();
