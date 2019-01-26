@@ -67,6 +67,19 @@ void Hasher::HashEntries() {
         QFileInfo file_info(it.next());
         if (file_info.isFile()) {
             if (isOpenable(file_info)) {
+                sha256_hashes[sha256(file_info)].push_back(file_info.absoluteFilePath());
+            }
+            emit FileHashed();
+            emit FileHashed();
+        }
+    }
+    emit Done(sha256_hashes);
+    return;
+    while (it.hasNext()) {
+        if (QThread::currentThread()->isInterruptionRequested()) return;
+        QFileInfo file_info(it.next());
+        if (file_info.isFile()) {
+            if (isOpenable(file_info)) {
                 weak_hashes[weak_hash(c, file_info)].push_back(file_info.absoluteFilePath());
             } else {
                 emit FileHashed();
@@ -77,6 +90,7 @@ void Hasher::HashEntries() {
         }
     }
     delete c;
+
     for (auto it = weak_hashes.begin(); it != weak_hashes.end(); it++) {
         if (it.value().size() > 1) {
             for (QString &i : it.value()) {
