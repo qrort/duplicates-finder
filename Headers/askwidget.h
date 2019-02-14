@@ -8,18 +8,18 @@ namespace Ui {
 class AskWidget;
 }
 
-using DuplicatesMap = QMap <QByteArray, QVector <QString>>;
+using DuplicatesVector = QVector <QVector <QString> >;
 
 class AskWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit AskWidget(DuplicatesMap const& _data, QWidget *parent = 0);
+    explicit AskWidget(DuplicatesVector const& _data, QWidget *parent = 0);
     ~AskWidget();
 public slots:
     void deleteDuplicates();
 private:
-    DuplicatesMap data;
+    DuplicatesVector data;
     Ui::AskWidget *ui;
 };
 

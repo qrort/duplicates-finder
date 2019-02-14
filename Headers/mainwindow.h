@@ -10,7 +10,7 @@ namespace Ui {
 class MainWindow;
 }
 
-using DuplicatesMap = QMap <QByteArray, QVector <QString>>;
+using DuplicatesVector = QVector <QVector <QString> >;
 
 class MainWindow : public QMainWindow
 {
@@ -26,7 +26,7 @@ private slots:
 
     void on_scanButton_clicked();
 
-    void ask(DuplicatesMap);
+    void ask(DuplicatesVector);
 
     void on_cancelButton_clicked();
 

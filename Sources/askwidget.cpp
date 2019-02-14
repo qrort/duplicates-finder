@@ -3,7 +3,7 @@
 #include <QDesktopWidget>
 #include <QFile>
 
-AskWidget::AskWidget(DuplicatesMap const& _data, QWidget *parent) :
+AskWidget::AskWidget(DuplicatesVector const& _data, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::AskWidget)
 {
@@ -13,9 +13,9 @@ AskWidget::AskWidget(DuplicatesMap const& _data, QWidget *parent) :
 
     setWindowTitle("Search results:");
     size_t rowcnt = 0;
-    for (auto it = data.begin(); it != data.end(); it++) {
-        if (it.value().size() > 1) {
-            for (QString duplicate : it.value()) {
+    for (auto& el : data) {
+        if (el.size() > 1) {
+            for (QString& duplicate : el) {
                 QListWidgetItem *newItem = new QListWidgetItem;
                 newItem->setText(duplicate);
 

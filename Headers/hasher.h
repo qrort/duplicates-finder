@@ -6,7 +6,7 @@
 #include <QVector>
 #include <QString>
 
-using DuplicatesMap = QMap <QByteArray, QVector <QString>>;
+using DuplicatesVector = QVector <QVector <QString> >;
 
 class Hasher : public QObject {
     Q_OBJECT
@@ -18,7 +18,7 @@ public
         void HashEntries();
     signals:
         void FileHashed();
-        void Done(DuplicatesMap);
+        void Done(DuplicatesVector);
         void log(QString);
 private:
     bool isOpenable(const QFileInfo & file_info);

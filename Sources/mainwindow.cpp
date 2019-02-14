@@ -31,7 +31,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->treeView->setColumnWidth(0, 320);
     ui->treeView->setRootIndex(model->index(QDir::homePath()));
     set_selected_directory(QDir::home());
-    qRegisterMetaType<DuplicatesMap>("DuplicatesMap");
+    qRegisterMetaType<DuplicatesVector>("DuplicatesVector");
 }
 
 MainWindow::~MainWindow()
@@ -71,13 +71,13 @@ void MainWindow::list_error(QString message) {
     ui->errorList->insertItem(errors++, newItem);
 }
 
-void MainWindow::ask(DuplicatesMap sha256_hashes) {
+void MainWindow::ask(DuplicatesVector duplicates) {
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     QListWidgetItem *newItem = new QListWidgetItem;
     newItem->setText(QString::number(std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()) +
                      "ms");
     ui->errorList->insertItem(errors++, newItem);
-    AskWidget *askWidget = new AskWidget(sha256_hashes);
+    AskWidget *askWidget = new AskWidget(duplicates);
     delete_thread();
     askWidget->setWindowModality(Qt::ApplicationModal);
     askWidget->show();
@@ -104,7 +104,6 @@ void MainWindow::on_scanButton_clicked()
         ui->errorList->clear();
         ui->progressBar->setValue(0);
         ui->progressBar->setMaximum(2 * files_count);
-        qDebug() << ui->progressBar->maximum() << endl;
         hasher->moveToThread(hashing_thread);
         connect(hasher, &Hasher::Done, this, &MainWindow::ask);
         connect(hasher, &Hasher::FileHashed, this, &MainWindow::update_progress);
