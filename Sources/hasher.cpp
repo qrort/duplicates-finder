@@ -32,14 +32,15 @@ bool Hasher::isOpenable(const QFileInfo & file) {
 
 namespace {
     int const BUFFER_SIZE = 9;
-    long long weak_hash(char *&c, const QFileInfo &file_info) {
+    long long weak_hash(const QFileInfo &file_info) {
         QFile file(file_info.absoluteFilePath());
         file.open(QIODevice::ReadOnly);
         long long res = file.size();
         int i = 0;
+        char c;
         for (; i < 10 && !file.atEnd(); i++) {
-            file.read(c, sizeof(char));
-            res = (res * tools::p + (*c) + 1) % tools::mod;
+            file.read(&c, sizeof(char));
+            res = (res * tools::p + c + 1) % tools::mod;
         }
         for (; i < 10; i++) {
             res = (res * tools::p) % tools::mod;
@@ -57,13 +58,7 @@ namespace {
                 int l1 = static_cast<int>(p.read(b1, BUFFER_SIZE)),
                 l2 = static_cast<int>(q.read(b2, BUFFER_SIZE));
                 if (!l1) break;
-                if (l1 == l2) {
-                    for (int i = 0; i < l1; i++) {
-                        if (b1[i] != b2[i]) return false;
-                    }
-                } else {
-                    return false;
-                }
+                if (!(l1 == l2 && !memcmp(b1, b2, l1))) return false;
             }
             return true;
         }
@@ -91,7 +86,7 @@ namespace {
             }
         );
         int ones = 0;
-        for (int i = 0; i < v.size(); i++) ones += (v.size() < 2);
+        for (int i = 0; i < v.size(); i++) ones += (v[i].size() < 2);
         v.resize(v.size() - ones);
     }
 }
@@ -99,24 +94,19 @@ void Hasher::HashEntries() {
     DuplicatesVector duplicates;
     QHash <long long, QVector <QString>> weak_hashes;
     QDirIterator it(dir.absolutePath(), QDir::Dirs | QDir::Files | QDir::Hidden | QDir::NoDotAndDotDot | QDir::NoSymLinks, QDirIterator::Subdirectories);
-    char *c = new char;
-    int cnt = 0;
+
     while (it.hasNext()) {
         if (QThread::currentThread()->isInterruptionRequested()) return;
         QFileInfo file_info(it.next());
         if (file_info.isFile()) {
             if (isOpenable(file_info)) {
-                weak_hashes[weak_hash(c, file_info)].push_back(file_info.absoluteFilePath());
+                weak_hashes[weak_hash(file_info)].push_back(file_info.absoluteFilePath());
             } else {
                 emit FileHashed();
-                cnt++;
             }
             emit FileHashed();
-            cnt++;
         }
     }
-
-    delete c;
 
     for (auto it = weak_hashes.begin(); it != weak_hashes.end(); it++) {
         DuplicatesVector resolved;
@@ -126,11 +116,9 @@ void Hasher::HashEntries() {
                 if (QThread::currentThread()->isInterruptionRequested()) return;
                 push_to_container(resolved, i);
                 emit FileHashed();
-                cnt++;
             }
         } else {
             emit FileHashed();
-            cnt++;
         }
 
         append(duplicates, resolved);
