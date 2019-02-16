@@ -108,6 +108,7 @@ void MainWindow::on_scanButton_clicked()
         connect(hasher, &Hasher::Done, this, &MainWindow::ask);
         connect(hasher, &Hasher::FileHashed, this, &MainWindow::update_progress);
         connect(hasher, &Hasher::log, this, &MainWindow::list_error);
+        connect(hasher, &Hasher::Done, hasher, &Hasher::deleteLater);
         connect(hashing_thread, &QThread::started, hasher, &Hasher::HashEntries);
         hashing_thread->start();
     }

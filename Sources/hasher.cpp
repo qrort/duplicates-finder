@@ -7,12 +7,6 @@
 #include <QThread>
 #include <QDebug>
 
-namespace tools {
-    QCryptographicHash hasher(QCryptographicHash::Sha256);
-    long long const p = 31541;
-    long long const mod = 1e9 + 9;
-}
-
 Hasher::Hasher(QDir _dir) {
     dir = _dir;
     qRegisterMetaType<QString>("QString");
@@ -31,7 +25,10 @@ bool Hasher::isOpenable(const QFileInfo & file) {
 }
 
 namespace {
-    int const BUFFER_SIZE = 9;
+    QCryptographicHash hasher(QCryptographicHash::Sha256);
+    long long const p = 31541;
+    long long const mod = 1e9 + 9;
+    int const BUFFER_SIZE = 1 << 12;
     long long weak_hash(const QFileInfo &file_info) {
         QFile file(file_info.absoluteFilePath());
         file.open(QIODevice::ReadOnly);
@@ -40,10 +37,10 @@ namespace {
         char c;
         for (; i < 10 && !file.atEnd(); i++) {
             file.read(&c, sizeof(char));
-            res = (res * tools::p + c + 1) % tools::mod;
+            res = (res * p + c + 1) % mod;
         }
         for (; i < 10; i++) {
-            res = (res * tools::p) % tools::mod;
+            res = (res * p) % mod;
         }
         file.close();
         return res;
